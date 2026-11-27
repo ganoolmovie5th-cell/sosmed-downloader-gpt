@@ -7,7 +7,7 @@ let media = [];
 let currentFilter = 'all';
 function status(message, state = '') { $('#status').textContent = message; $('#status').className = `status ${state}`; }
 function detect(value) { try { return hostPlatforms[new URL(value).hostname.replace(/^www\./, '')]; } catch { return null; } }
-$('#url').addEventListener('input', () => { const platform = detect($('#url').value); $('#detected').textContent = platform ? names[platform] : 'Deteksi otomatis'; });
+$('#url').addEventListener('input', () => { const platform = detect($('#url').value); $('#detected').replaceChildren(platform ? platformLogo(platform) : document.createTextNode('Deteksi otomatis')); });
 $('#paste').addEventListener('click', async () => {
   try { $('#url').value = await navigator.clipboard.readText(); $('#url').dispatchEvent(new Event('input')); $('#url').focus(); }
   catch { status('Akses clipboard tidak tersedia. Tempel manual dengan Ctrl+V atau Cmd+V.', 'error'); $('#url').focus(); }
@@ -38,12 +38,13 @@ $('#resolve-form').addEventListener('submit', async (event) => {
     $('#warnings').replaceChildren();
     for (const warning of data.warnings) { const p = document.createElement('p'); p.textContent = warning; $('#warnings').append(p); }
     $('#warnings').hidden = !data.warnings.length;
-    $('#result-caption').textContent = `${names[data.platform]} · ${data.title}`; $('#result-caption').hidden = false;
+    $('#result-caption').replaceChildren(platformLogo(data.platform), document.createTextNode(data.title)); $('#result-caption').hidden = false;
     render(); status(`${media.length} berkas ditemukan. Pilih media yang ingin disimpan.`);
   } catch (error) { status(controller.signal.aborted ? (controller.signal.reason === 'timeout' ? 'Waktu tunggu habis. Coba lagi dengan postingan lain.' : 'Pencarian dibatalkan. Anda bisa memasukkan tautan lain.') : error.message, 'error'); }
   finally { clearTimeout(timeout); activeRequest = null; busy(false); }
 });
 function element(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node; }
+function platformLogo(key) { const image = document.createElement('img'); image.src = `/icons/${key}.svg`; image.alt = names[key]; image.title = names[key]; image.width = 24; image.height = 24; image.className = 'platform-icon'; return image; }
 function safeMediaURL(value) { try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; } }
 function render() {
   $('#count').textContent = media.length; $('#filters').hidden = !media.length; $('#download-note').hidden = !media.length;
@@ -63,10 +64,10 @@ function render() {
     preview.append(visual); card.append(preview);
     const info = element('div', 'media-info'); info.append(element('h3', '', `${String(index).padStart(2,'0')} / ${item.label}`));
     info.append(element('p', '', (item.width && item.height ? `${item.width} × ${item.height} · ` : '') + 'Tanpa kompresi ulang'));
-    const download = element('button', 'primary', 'Unduh berkas ↓'); download.type = 'button'; download.setAttribute('aria-label', `Unduh ${item.label} ${index}`);
+    const download = element('button', 'primary', 'Unduh berkas'); download.type = 'button'; download.setAttribute('aria-label', `Unduh ${item.label} ${index}`);
     const message = element('p', 'media-message'); message.setAttribute('role','status');
     download.addEventListener('click', () => downloadMedia(item, index, download, message));
-    const links = element('div', 'media-links'), open = element('a', '', 'Buka berkas ↗'); open.href = item.url; open.target = '_blank'; open.rel = 'noopener noreferrer';
+    const links = element('div', 'media-links'), open = element('a', '', 'Buka berkas'); open.href = item.url; open.target = '_blank'; open.rel = 'noopener noreferrer';
     const copy = element('button', '', 'Salin tautan'); copy.type = 'button'; copy.setAttribute('aria-label', `Salin tautan media ${index}`);
     copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(item.url); message.textContent = 'Tautan media disalin.'; } catch { message.textContent = 'Clipboard diblokir. Klik kanan atau tekan lama “Buka berkas” untuk menyalin tautan.'; } });
     links.append(open, copy); info.append(download, links, message); card.append(info); $('#media-grid').append(card);
@@ -95,6 +96,6 @@ $('#filters').addEventListener('click', event => { const button = event.target.c
 fetch('/support.json').then(response => { if (!response.ok) throw new Error(); return response.json(); }).then(data => {
   $('#support-list').replaceChildren();
   for (const platform of data.platforms) {
-    const item = element('div','support-item'); item.append(element('h3','',platform.name), element('span',`badge ${platform.verified ? 'verified' : ''}`,platform.status), element('p','',platform.note)); $('#support-list').append(item);
+    const item = element('div','support-item'); const heading = element('h3'); heading.append(platformLogo(Object.keys(names).find(key => names[key] === platform.name))); item.append(heading, element('span',`badge ${platform.verified ? 'verified' : ''}`,platform.status), element('p','',platform.note)); $('#support-list').append(item);
   }
 }).catch(() => { $('#support-list').textContent = 'Status pengujian tidak dapat dimuat. Seluruh platform dianggap eksperimental.'; });
