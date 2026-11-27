@@ -1,0 +1,35 @@
+{
+  "testedAt": "2026-11-27",
+  "platforms": [
+    {
+      "name": "Instagram",
+      "verified": true,
+      "status": "Sampel lolos",
+      "note": "Dua postingan: 17 foto + 1 video. Unduhan sumber berhasil."
+    },
+    {
+      "name": "TikTok",
+      "verified": false,
+      "status": "Unduhan dibatasi",
+      "note": "URL video ditemukan; CDN menolak unduhan pada sampel uji."
+    },
+    {
+      "name": "Facebook",
+      "verified": true,
+      "status": "Sampel lolos",
+      "note": "Video + audio terpisah berhasil diunduh. Foto belum diuji."
+    },
+    {
+      "name": "X / Twitter",
+      "verified": true,
+      "status": "Sampel lolos",
+      "note": "Satu foto dan satu video berhasil diunduh."
+    },
+    {
+      "name": "Threads",
+      "verified": false,
+      "status": "Eksperimental",
+      "note": "Belum ada sampel media yang berhasil diambil."
+    }
+  ]
+}

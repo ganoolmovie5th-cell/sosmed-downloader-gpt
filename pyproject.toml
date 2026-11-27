@@ -1,0 +1,5 @@
+[project]
+name = "sosmed-downloader"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = ["gallery-dl==1.32.21", "requests==2.34.2"]
