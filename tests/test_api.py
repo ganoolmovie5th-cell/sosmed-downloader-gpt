@@ -50,6 +50,21 @@ class APITests(unittest.TestCase):
         run.side_effect=RuntimeError('secret-token')
         code,data=self.request({'url':'https://x.com/u/status/123'})
         self.assertEqual(code,502);self.assertNotIn('secret-token',str(data))
+    def test_child_inherits_runtime_dependency_directory(self):
+        import sys
+        import tempfile
+        from pathlib import Path
+        original_run = subprocess.run
+        with tempfile.TemporaryDirectory() as vendor:
+            Path(vendor, 'runtime_dependency_probe.py').write_text('VALUE = True')
+            def launch_child(*args, **kwargs):
+                return original_run([sys.executable, '-S', '-c',
+                    'import runtime_dependency_probe as dep, json; print(json.dumps({"ok": dep.VALUE, "items": []}))'], **kwargs)
+            with patch.object(sys, 'path', [*sys.path, vendor]), patch('api.resolve.subprocess.run', side_effect=launch_child):
+                code, data = self.request({'url':'https://x.com/user/status/123'})
+            self.assertEqual(code, 200)
+            self.assertTrue(data['ok'])
+
     def test_budget(self):
         from time import monotonic
         resolve._recent.extend([monotonic()]*12)

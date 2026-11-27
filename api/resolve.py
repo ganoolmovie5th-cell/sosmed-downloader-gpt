@@ -62,7 +62,9 @@ class handler(BaseHTTPRequestHandler):
             acquired = _slots.acquire(blocking=False)
             if not acquired:
                 raise ResolveError('Server sedang memproses permintaan lain. Coba sebentar lagi.', 429)
-            env = {**os.environ, 'PYTHONPATH': str(ROOT), 'PYTHONDONTWRITEBYTECODE': '1'}
+            # Vercel adds vendored dependencies to sys.path only in the parent process.
+            env = {**os.environ, 'PYTHONPATH': os.pathsep.join([str(ROOT), *sys.path]),
+                   'PYTHONDONTWRITEBYTECODE': '1'}
             completed = subprocess.run([sys.executable, '-m', 'server.worker', url],
                                        cwd=ROOT, env=env, capture_output=True, text=True, timeout=23)
             if completed.returncode or len(completed.stdout) > 300000:
